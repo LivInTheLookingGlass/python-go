@@ -13,6 +13,7 @@ class board():
         self.turn = 1
         self.prisoners = {'black': 0, 'white': 0}
         self.komi = komi
+        self.ko = False
         self.prev_board = ""
         self.prev_prev_board = ""
         self.move_history = [(sizex, sizey, komi)]
