@@ -14,8 +14,6 @@ class board():
         self.prisoners = {'black': 0, 'white': 0}
         self.komi = komi
         self.ko = False
-        self.prev_board = ""
-        self.prev_prev_board = ""
         self.move_history = [(sizex, sizey, komi)]
 
     @classmethod
@@ -130,8 +128,6 @@ class board():
             raise IndexError("Illegal move--ko prevents board loops")
         for i in piece.neighboring_enemies():
             self.prisoners[self.whos_turn()] += i.capture(override=False)
-        self.prev_prev_board = self.prev_board
-        self.prev_board = self.__pos__()
         self.move_history += [(piece.color, x, y)]
         self.turn += 1
         return True
