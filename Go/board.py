@@ -1,9 +1,9 @@
 colors = ["white", "black", "edge"]
-from stone import stone
+from .stone import stone
 
 class board():
     def __init__(self, sizex, sizey, komi=5.5):
-        """Initializes a board of a specified size. To enter a known state, use board.from_repr() or board.from_history()"""
+        """Initializes a board of a specified size. To enter a known state, use board.from_repr()"""
         self.sizex = sizex - 1
         self.sizey = sizey - 1
         self.size = str(sizex) + 'x' + str(sizey)
@@ -42,7 +42,6 @@ class board():
 
     @classmethod
     def from_history(cls, hist):
-        """Given a list of moves and metadata, reconstruct a board. Format: [(sizex, sizey, komi), (color_move_one, x_move_one, y_move_one), ...]"""
         size = hist[0]
         hist = hist[1:]
         b = board(*size)
@@ -51,7 +50,7 @@ class board():
         return b
 
     def __eq__(self, comp):
-        """Compare move histories, if possible; Otherwise return False"""
+        """Compare move histories, if possible"""
         try:
             return self.move_history == comp.move_history
         except:
@@ -84,8 +83,7 @@ class board():
         string = self.__pos__()
         string += "\nTurn: " + str(self.turn) + " Komi: " + str(self.komi) + \
                    " Dead: " + str(self.prisoners['black']) + "," + \
-                               str(self.prisoners['white']) + \
-                   " Ko: " + str(self.ko)
+                               str(self.prisoners['white'])
         return string
 
     def __place__(self, color, x, y):
@@ -135,7 +133,6 @@ class board():
         return True
 
     def test_placement(self, color, x, y):
-        """Forks the board to test a placement without affecting the match"""
         brd = board.from_history(self.move_history)
         return brd.place(color, x, y)
 
@@ -148,11 +145,9 @@ class board():
         return False
 
     def whos_turn(self):
-        """Returns the color who's turn it is"""
         return colors[self.turn % 2]
 
     def score(self, territory=False):
-        """Attempts to score the board, and returns a dictionary keyed by color"""
         if territory:
             print("Territory scoring is not fully supported, but we'll count what's on the board")
             s = self.score(False)
@@ -167,7 +162,6 @@ class board():
             return s
 
     def territory_score(self):
-        """Scores (incorrectly) by territory, and returns a dictionary keyed by color"""
         grid = [['-' for y in range(self.sizey + 1)] for x in range(self.sizex + 1)]
         for x in range(self.sizex + 1):
             for y in range(self.sizey + 1):
@@ -201,8 +195,7 @@ class board():
         return s
 
     def test_ko(self, x, y):
-        """Tests whether the ko rule is triggered"""
-        if self[x, y].is_captured() and True in [piece.is_captured() and piece.thickness() == 1 for piece in self[x,y].neighboring_enemies()]:
+        if self[x, y].is_captured() and True in [piece.is_captured() and piece.thickness() == 1 for piece in self[x,y].neighbors()]:
             if self.ko:
                 return True
             else:
