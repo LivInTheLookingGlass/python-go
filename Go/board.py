@@ -1,29 +1,28 @@
 colors = ["white", "black", "edge"]
-from .stone import stone
+from stone import stone
 
 class board():
-    def __init__(self, sizex, sizey):
+    def __init__(self, sizex, sizey, komi=5.5):
         """Initializes a board of a specified size. To enter a known state, use board.from_repr()"""
         self.sizex = sizex - 1
         self.sizey = sizey - 1
         self.size = str(sizex) + 'x' + str(sizey)
-        self.field = []
+        self.__field__ = []
         for i in range(sizey):
-            self.field += [[None for j in range(sizex)]]
-        self.ko = (None, None)
-        self.next_ko = (None, None)
+            self.__field__ += [[None for j in range(sizex)]]
         self.turn = 1
         self.prisoners = {'black': 0, 'white': 0}
-        self.komi = 5.5
+        self.komi = komi
         self.prev_board = ""
         self.prev_prev_board = ""
+        self.move_history = [(sizex, sizey, komi)]
 
     @classmethod
     def from_repr(cls, string):
         """Given a string representation of a board, reproduce that board and return it"""
         string = str(string).replace("\r", "")
         lines = string.split("\n")
-        turn = int(lines[len(lines) - 1][5:])
+        meta = lines[len(lines) - 1].split(" ")
         lines = lines[:-1]
         lenx = len(lines[0])
         for line in lines:
@@ -38,12 +37,25 @@ class board():
                     b.__place__("white", x, y)
                 elif lines[y][x * 2] == "B":
                     b.__place__("black", x, y)
-        b.turn = turn
+        b.turn = int(meta[1])
+        b.komi = float(meta[3])
+        return b
+
+    @classmethod
+    def from_history(cls, hist):
+        size = hist[0]
+        hist = hist[1:]
+        b = board(*size)
+        for move in hist:
+            b.place(*move)
         return b
 
     def __eq__(self, comp):
-        """Since these are string reconstructable, compare their strings"""
-        return str(self) == str(comp)
+        """Compare move histories, if possible"""
+        try:
+            return self.move_history == comp.move_history
+        except:
+            return False
 
     def __getitem__(self, coords):
         """Get a stone from a given x/y coordinate. format: board[x, y]"""
@@ -51,7 +63,7 @@ class board():
             raise ValueError("Coordinates must be given as x, y")
         x = coords[0]
         y = coords[1]
-        return self.field[y][x]
+        return self.__field__[y][x]
 
     def __pos__(self):
         """Returns a visual, partially-serialized representation of the board positions"""
@@ -70,7 +82,9 @@ class board():
     def __repr__(self):
         """Returns a visual, serialized representation of the board"""
         string = self.__pos__()
-        string += "\nTurn: " + str(self.turn)
+        string += "\nTurn: " + str(self.turn) + " Komi: " + str(self.komi) + \
+                   " Dead: " + str(self.prisoners['black']) + "," + \
+                               str(self.prisoners['white'])
         return string
 
     def __place__(self, color, x, y):
@@ -93,8 +107,8 @@ class board():
             down = self[x, y+1]
         else:
             down = stone("edge")
-        self.field[y][x] = stone(color, left=left, right=right, up=up, 
-                                  down=down, board=self, coord=(x, y))
+        self.__field__[y][x] = stone(color, left=left, right=right, up=up, 
+                                      down=down, board=self, coord=(x, y))
 
     def place(self, color, x, y, turn_override=False):
         """Place a stone of a specific color on the board"""
@@ -107,18 +121,17 @@ class board():
         if piece.color != self.whos_turn() and not turn_override:
             self.remove(x, y)
             raise Exception("Illegal move--it's not your turn")
-        elif self.test_ko(x, y):
-            self.remove(x, y)
-            raise IndexError("Illegal move--ko prevents board loops")
         elif piece.is_captured() and True not in [n.is_captured() for n in piece.neighboring_enemies()]:
             self.remove(x, y)
             raise IndexError("Illegal move--this is suicidal")
-        for i in piece.neighboring_enemies() + [piece]:
+        elif self.test_ko(x, y):
+            self.remove(x, y)
+            raise IndexError("Illegal move--ko prevents board loops")
+        for i in piece.neighboring_enemies():
             self.prisoners[self.whos_turn()] += i.capture(override=False)
-        self.ko = self.next_ko
-        self.next_ko = (x, y)
         self.prev_prev_board = self.prev_board
         self.prev_board = self.__pos__()
+        self.move_history += [(piece.color, x, y)]
         self.turn += 1
         return True
 
@@ -126,16 +139,14 @@ class board():
         """Remove the piece at the given coordinates"""
         if self[x, y]:
             self[x, y].cleanup()
-            self.field[y][x] = None
+            self.__field__[y][x] = None
             return True
         return False
 
     def whos_turn(self):
-        """Returns the color who's turn it currently is"""
         return colors[self.turn % 2]
 
     def score(self, territory=False):
-        """Returns the current score"""
         if territory:
             print("Territory scoring is not fully supported, but we'll count what's on the board")
             s = self.score(False)
@@ -150,15 +161,8 @@ class board():
             return s
 
     def test_ko(self, x, y):
-        """Tests to see if the Ko rule has been violated on a safe copy of the board"""
         b = board.from_repr(str(self))
         piece = b[x, y]
-        if piece.color != b.whos_turn() and not turn_override:
-            b.remove(x, y)
-            raise Exception("Illegal move--it's not your turn")
-        elif piece.is_captured() and True not in [n.is_captured() for n in piece.neighbors()]:
-            b.remove(x, y)
-            raise IndexError("Illegal move--this is suicidal")
-        for i in piece.neighbors() + [piece]:
-            self.prisoners[b.whos_turn()] += i.capture(override=False)
+        for i in piece.neighboring_enemies():
+            b.prisoners[b.whos_turn()] += i.capture(override=False)
         return b.__pos__() == self.prev_prev_board
