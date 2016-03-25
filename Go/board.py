@@ -198,8 +198,9 @@ class board():
         return s
 
     def test_ko(self, x, y):
-        b = board.from_repr(str(self))
-        piece = b[x, y]
-        for i in piece.neighboring_enemies():
-            b.prisoners[b.whos_turn()] += i.capture(override=False)
-        return b.__pos__() == self.prev_prev_board
+        if self[x, y].is_captured() and True in [piece.is_captured() and piece.thickness() == 1 for piece in self[x,y].neighbors()]:
+            if self.ko:
+                return True
+            else:
+                self.ko = True
+        return False
