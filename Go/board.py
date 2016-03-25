@@ -126,8 +126,6 @@ class board():
         elif self.test_ko(x, y):
             self.remove(x, y)
             raise IndexError("Illegal move--ko prevents board loops")
-        else:
-            self.ko = False
         for i in piece.neighboring_enemies():
             self.prisoners[self.whos_turn()] += i.capture(override=False)
         self.move_history += [(piece.color, x, y)]
@@ -202,4 +200,6 @@ class board():
                 return True
             else:
                 self.ko = True
+                return False
+        self.ko = False
         return False
