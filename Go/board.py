@@ -202,7 +202,7 @@ class board():
 
     def test_ko(self, x, y):
         """Tests whether the ko rule is triggered"""
-        if self[x, y].is_captured() and True in [piece.is_captured() and piece.thickness() == 1 for piece in self[x,y].neighbors()]:
+        if self[x, y].is_captured() and True in [piece.is_captured() and piece.thickness() == 1 for piece in self[x,y].neighboring_enemies()]:
             if self.ko:
                 return True
             else:
