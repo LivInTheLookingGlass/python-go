@@ -129,13 +129,13 @@ class board():
             raise IndexError("Illegal move--ko prevents board loops")
         for i in piece.neighboring_enemies():
             self.prisoners[self.whos_turn()] += i.capture(override=False)
-        self.move_history += [(piece.color, x, y)]
+        self.move_history += [(piece.color, x, y, turn_override)]
         self.turn += 1
         return True
 
     def test_placement(self, color, x, y):
         brd = board.from_history(self.move_history)
-        return brd.place(color, x, y)
+        return brd.place(color, x, y, turn_override=True)
 
     def remove(self, x, y):
         """Remove the piece at the given coordinates"""

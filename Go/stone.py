@@ -213,8 +213,11 @@ class stone():
                 upmost.map_relative_positions(first=False, set_origin=True, start_pos=(upmost.coord[0], 0))
 
     def num_eyes(self):
+        return len(self.get_eyes())
+
+    def get_eyes(self):
         stones = self.connected()
-        count = 0
+        eyes = set()
         to_check = set()
         # If you aren't associated with a board, make sure coords are correct
         if not self.board:
@@ -226,8 +229,8 @@ class stone():
         # For each of the unique candidates, count if they're an eye
         for coord in to_check:
             if self.is_eye(coord, stones):
-                count += 1
-        return count
+                eyes.add(coord)
+        return list(eyes)
 
     def is_eye(self, coord, stones=None):
         # Begin setup
@@ -278,3 +281,35 @@ class stone():
                 elif i[0] in range(0, right_edge) and i[1] in range(0, down_edge):
                     return False
         return True
+
+    def can_be_uncapturable(self, moves, passed_board=None):
+        """Serially brute forces every combination of moves up to x to see if a group can be made uncapturable
+        Warning: This is blocking, and can take a long time at depths >= 4
+        Warning: This makes a copy of the board for each level of depth"""
+        if not passed_board:
+            # Inherit the object's board
+            passed_board = self.board
+        if not passed_board:
+            # If the object has no board...
+            raise ValueError("You can't call this without an associated board")
+        if not passed_board[self.coord].is_capturable():
+            # If the current configuration is uncapturable, you're done
+            print(passed_board)
+            return True
+        if moves > 0:
+            # If you have moves left, recurse for every move to a direct neighbor
+            from .board import board
+            coords = set()
+            for s in passed_board[self.coord].connected():
+                for coord in s.empty_neighbors():
+                    coords.add(coord)
+            for coord in coords:
+                b = board.from_history(passed_board.move_history)
+                try:
+                    b.place(self.color, coord[0], coord[1], turn_override=True)
+                except:
+                    return False
+                if self.can_be_uncapturable(moves - 1, b):
+                    return True
+        # Otherwise return False
+        return False
