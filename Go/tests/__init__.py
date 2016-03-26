@@ -14,7 +14,8 @@ def run():
     import multiprocessing
     tests = [from_history.test_from_history,
              from_repr.test_from_repr,
-             ko.test_ko]
+             ko.test_ko,
+             num_eyes.test_num_eyes]
     status = False not in multiprocessing.Pool().map(wrapper, tests)
     return status
 
