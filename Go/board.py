@@ -49,12 +49,13 @@ class board():
             b.place(*move)
         return b
 
+    def __hash__(self):
+        """Returns a unique integer for each possible board configuration"""
+        return hash((tuple([tuple(l) for l in self.__field__]), tuple(self.move_history)))
+
     def __eq__(self, comp):
         """Compare move histories, if possible"""
-        try:
-            return self.move_history == comp.move_history
-        except:
-            return False
+        return hash(self) == hash(comp) and isinstance(comp, type(self))
 
     def __getitem__(self, coords):
         """Get a stone from a given x/y coordinate. format: board[x, y]"""
