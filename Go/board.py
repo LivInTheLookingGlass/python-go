@@ -28,16 +28,18 @@ class board():
             if len(line) != lenx:
                 raise Exception("string is not in correct format")
         sizey = len(lines)
-        sizex = lenx / 2
+        sizex = int(lenx / 2)
         b = cls(sizex, sizey)
         for x in range(sizex):
             for y in range(sizey):
                 if lines[y][x * 2] == "W":
-                    b.__place__("white", x, y)
+                    b.__place__("white", x, y, True)
                 elif lines[y][x * 2] == "B":
-                    b.__place__("black", x, y)
+                    b.__place__("black", x, y, True)
         b.turn = int(meta[1])
         b.komi = float(meta[3])
+        b.prisoners['black'] = int(meta[5].split(',')[0])
+        b.prisoners['white'] = int(meta[5].split(',')[1])
         return b
 
     @classmethod
@@ -87,7 +89,7 @@ class board():
                                str(self.prisoners['white'])
         return string
 
-    def __place__(self, color, x, y):
+    def __place__(self, color, x, y, turn_override=False):
         """Place a stone without considering rules"""
         if self[x, y]:
             raise IndexError("Illegal move--there's already a piece there")
@@ -109,27 +111,31 @@ class board():
             down = stone("edge")
         self.__field__[y][x] = stone(color, left=left, right=right, up=up, 
                                       down=down, board=self, coord=(x, y))
+        self.move_history += [(color, x, y, turn_override)]
+
 
     def place(self, color, x, y, turn_override=False):
         """Place a stone of a specific color on the board"""
-        self.__place__(color, x, y)
+        self.__place__(color, x, y, turn_override)
         return self.process(x, y, turn_override)
 
     def process(self, x, y, turn_override=False):
         """Process the rules for a specific move"""
         piece = self[x, y]
         if piece.color != self.whos_turn() and not turn_override:
-            self.remove(x, y)
+            self.__remove__(x, y)
+            self.move_history = self.move_history[:-1]
             raise Exception("Illegal move--it's not your turn")
         elif piece.is_captured() and True not in [n.is_captured() for n in piece.neighboring_enemies()]:
-            self.remove(x, y)
+            self.__remove__(x, y)
+            self.move_history = self.move_history[:-1]
             raise IndexError("Illegal move--this is suicidal")
         elif self.test_ko(x, y):
-            self.remove(x, y)
+            self.__remove__(x, y)
+            self.move_history = self.move_history[:-1]
             raise IndexError("Illegal move--ko prevents board loops")
         for i in piece.neighboring_enemies():
             self.prisoners[self.whos_turn()] += i.capture(override=False)
-        self.move_history += [(piece.color, x, y, turn_override)]
         self.turn += 1
         return True
 
@@ -137,7 +143,7 @@ class board():
         brd = board.from_history(self.move_history)
         return brd.place(color, x, y, turn_override=True)
 
-    def remove(self, x, y):
+    def __remove__(self, x, y):
         """Remove the piece at the given coordinates"""
         if self[x, y]:
             self[x, y].cleanup()
@@ -204,3 +210,47 @@ class board():
                 return False
         self.ko = False
         return False
+
+    def is_surrounded(self, x, y):
+        """If a blank group is surrounded, and does not touch three sides, return the set of coordinates. Otherwise return False"""
+        if isinstance(self[x, y], stone):
+            raise TypeError("Checking stones is not yet supported. Use stone.group_liberties as a proxy")
+        to_check = set([(x,y)])
+        group = set([(x,y)])
+        # First gather a set of the blank stones in question
+        while len(to_check):
+            next_round = set()
+            for test in to_check:
+                x = test[0]
+                y = test[1]
+                for coord in [(x+1, y),(x-1, y),(x, y+1),(x, y-1)]:
+                    if coord in group or \
+                       coord[0] not in range(0, self.sizex + 1) or \
+                       coord[1] not in range(0, self.sizey + 1) or \
+                       self[coord]:
+                        continue
+                    next_round.add(coord)
+                group.add(test)
+            to_check = next_round
+        # If the group touches more than three edges, return False
+        xs = [coord[0] for coord in group]
+        ys = [coord[1] for coord in group]
+        if [0 in xs, self.sizex in xs, 0 in ys, self.sizey in ys].count(True) > 2:
+            return False
+        del xs, ys
+        # Otherwise check all the stones around this group for their color
+        to_check = set(group)
+        colors = set()
+        for test in to_check:
+            x = test[0]
+            y = test[1]
+            for coord in [(x+1, y),(x-1, y),(x, y+1),(x, y-1)]:
+                if coord[0] not in range(0, self.sizex + 1) or \
+                   coord[1] not in range(0, self.sizey + 1) or \
+                   not self[coord]:
+                    continue
+                colors.add(self[coord].color)
+        # Return False if there's multiple colors touching it
+        if len(colors) != 1:
+            return False
+        return group
