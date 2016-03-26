@@ -94,7 +94,7 @@ class stone():
             for i in self.connected():
                 count += 1
                 if i.board:
-                    i.board.remove(*i.coord)
+                    i.board.__remove__(*i.coord)
                 else:
                     i.__del__()
             return count
