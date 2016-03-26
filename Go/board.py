@@ -2,7 +2,7 @@ colors = ["white", "black", "edge"]
 from .stone import stone
 
 class board():
-    def __init__(self, sizex, sizey, komi=5.5):
+    def __init__(self, sizex, sizey, komi=6.5):
         """Initializes a board of a specified size. To enter a known state, use board.from_repr()"""
         self.sizex = sizex - 1
         self.sizey = sizey - 1
@@ -66,7 +66,7 @@ class board():
         return self.__field__[y][x]
 
     def __pos__(self):
-        """Returns a visual, partially-serialized representation of the board positions"""
+        """Returns a visual, partly serialized representation of the board positions"""
         string = ""
         for y in range(self.sizey + 1):
             for x in range(self.sizex + 1):
@@ -80,7 +80,7 @@ class board():
         return string[:-1]  # exclude the last endline
 
     def __repr__(self):
-        """Returns a visual, serialized representation of the board"""
+        """Returns a visual, mostly serialized representation of the board"""
         string = self.__pos__()
         string += "\nTurn: " + str(self.turn) + " Komi: " + str(self.komi) + \
                    " Dead: " + str(self.prisoners['black']) + "," + \
