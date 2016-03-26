@@ -51,7 +51,7 @@ class board():
 
     def __hash__(self):
         """Returns a unique integer for each possible board configuration"""
-        return hash((tuple([tuple(l) for l in self.__field__]), tuple(self.move_history)))
+        return hash((self.__pos__(), tuple(self.move_history)))
 
     def __eq__(self, comp):
         """Compare move histories, if possible"""
