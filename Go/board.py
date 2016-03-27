@@ -53,13 +53,16 @@ class board():
 
     @classmethod
     def from_sgf(cls, f):
-        if not f.read:
-            raise TypeError("This requires a file-like input")
+        try:
+            f.read
+        except:
+            f = open(f, 'r')
         lines = f.read().replace('\r', '').replace('\n','').split(';')
         meta = lines[1]
         lines = lines[2:]
         size = meta.split('SZ[')[1].split(']')[0]
-        b = cls(int(size), int(size))
+        komi = meta.split('KM[')[1].split(']')[0]
+        b = cls(int(size), int(size), float(komi))
         def translate_coord(string):
             grid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
             x = string[0]
