@@ -70,24 +70,37 @@ class board():
     def __pos__(self):
         """Returns a visual, partly serialized representation of the board positions"""
         string = ""
+        symbols = {"white": "W ", "black": "B "}
         for y in range(self.sizey + 1):
             for x in range(self.sizex + 1):
                 if not self[x, y]:
                     string += "- "
-                elif self[x, y].color == "white":
-                    string += "W "
-                elif self[x, y].color == "black":
-                    string += "B "
+                else:
+                    string += symbols[self[x, y].color]
             string += "\n"
         return string[:-1]  # exclude the last endline
 
-    def __repr__(self):
+    def __repr__(self, string=None):
         """Returns a visual, mostly serialized representation of the board"""
-        string = self.__pos__()
+        if string is None:
+            string = self.__pos__()
         string += "\nTurn: " + str(self.turn) + " Komi: " + str(self.komi) + \
                    " Dead: " + str(self.prisoners['black']) + "," + \
                                str(self.prisoners['white'])
         return string
+
+    def highlight(self, group=[]):
+        string = self.__pos__().replace('W', 'w').replace('B', 'b')
+        lines = string.split('\n')
+        symbols = {"w": "W", "b": "B", "-": "#"}
+        for coord in group:
+            x = coord[0]
+            y = coord[1]
+            lines[y] = lines[y][0:x*2] + symbols[lines[y][x*2]] + lines[y][x*2+1:]
+        string = ""
+        for line in lines:
+            string += line + "\n"
+        return self.__repr__(string[:-1])
 
     def __place__(self, color, x, y, turn_override=False):
         """Place a stone without considering rules"""
