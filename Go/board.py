@@ -51,6 +51,28 @@ class board():
             b.place(*move)
         return b
 
+    @classmethod
+    def from_sgf(cls, f):
+        if not f.read:
+            raise TypeError("This requires a file-like input")
+        lines = f.read().replace('\r', '').replace('\n','').split(';')
+        meta = lines[1]
+        lines = lines[2:]
+        size = meta.split('SZ[')[1].split(']')[0]
+        b = cls(int(size), int(size))
+        def translate_coord(string):
+            grid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            x = string[0]
+            y = string[1]
+            return (grid.index(x), grid.index(y))
+            
+        for line in lines:
+            if 'B[' in line:
+                b.place('black', *translate_coord(line[2:4]))
+            elif 'W[' in line:
+                b.place('white', *translate_coord(line[2:4]))
+        return b                
+
     def __hash__(self):
         """Returns a unique integer for each possible board configuration"""
         return hash((self.__pos__(), tuple(self.move_history)))
@@ -267,3 +289,29 @@ class board():
         if len(colors) != 1:
             return False
         return group
+
+    def get_easily_scored(self):
+        group = set()
+        for y in range(self.sizey + 1):
+            for x in range(self.sizex + 1):
+                if (x, y) not in group:
+                    if not self[x,y] and self.is_surrounded(x,y):
+                        group.update(self.is_surrounded(x,y))
+                    elif self[x,y] and not self[x,y].is_capturable():
+                        group.update([s.coord for s in self[x,y].connected()])
+        return group
+
+    def print_easily_scored(self):
+        print(self.highlight(self.get_easily_scored()))
+
+    def get_difficult_to_score(self):
+        anti_group = self.get_easily_scored()
+        group = set()
+        for y in range(self.sizey + 1):
+            for x in range(self.sizex+ 1):
+                if (x, y) not in anti_group:
+                    group.add((x, y))
+        return group
+
+    def print_difficult_to_score(self):
+        print(self.highlight(self.get_difficult_to_score()))
