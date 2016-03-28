@@ -11,13 +11,9 @@ __all__ = ["capturable", "from_history", "from_repr", "ko",
            "nonterritory_score", "num_eyes", "relative_positions", "suicide"]
 
 def run():
-    import multiprocessing
-    tests = [from_history.test_from_history,
-             from_repr.test_from_repr,
-             ko.test_ko,
-             num_eyes.test_num_eyes]
-    status = False not in multiprocessing.Pool().map(wrapper, tests)
+    tests = [from_history.test_from_history(),
+             from_repr.test_from_repr(),
+             ko.test_ko(),
+             num_eyes.test_num_eyes()]
+    status = False not in tests
     return status
-
-def wrapper(func):
-    return func()
