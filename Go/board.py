@@ -62,6 +62,8 @@ class board():
         lines = lines[2:]
         size = meta.split('SZ[')[1].split(']')[0]
         komi = meta.split('KM[')[1].split(']')[0]
+        if "Japanese" not in meta or "japanese" not in meta or "JAPANESE" not in meta:
+            print("Warning: This game may have been in a different ruleset")
         b = cls(int(size), int(size), float(komi))
         def translate_coord(string):
             grid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
