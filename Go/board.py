@@ -48,7 +48,12 @@ class board():
         hist = hist[1:]
         b = board(*size)
         for move in hist:
-            b.place(*move)
+            if move[0] == "add":
+                b.__place__(*move[1:])
+            elif move[0] == "remove":
+                b.__remove__(*move[1:])
+            else:
+                b.place(*move)
         return b
 
     @classmethod
@@ -59,7 +64,6 @@ class board():
             f = open(f, 'r')
         lines = f.read().replace('\r', '').replace('\n','').split(';')
         meta = lines[1]
-        lines = lines[2:]
         size = meta.split('SZ[')[1].split(']')[0]
         komi = meta.split('KM[')[1].split(']')[0]
         if "Japanese" not in meta or "japanese" not in meta or "JAPANESE" not in meta:
@@ -72,10 +76,22 @@ class board():
             return (grid.index(x), grid.index(y))
             
         for line in lines:
-            if 'B[' in line:
+            if 'AB[' in line:
+                coord = translate_coord(line[3:5])
+                b.__place__('black', *coord)
+                b.move_history += ("add", "black", coord[0], coord[1])
+            elif 'AW[' in line:
+                coord = translate_coord(line[3:5])
+                b.__place__('white', *coord)
+                b.move_history += ("add", "white", coord[0], coord[1])
+            elif 'B[' in line:
                 b.place('black', *translate_coord(line[2:4]))
             elif 'W[' in line:
                 b.place('white', *translate_coord(line[2:4]))
+            elif 'AE[' in line:
+                coord = translate_coord(line[3:5])
+                b.__remove__(*coord)
+                b.move_history += ("remove", coord[0], coord[1])
         return b                
 
     def __hash__(self):
