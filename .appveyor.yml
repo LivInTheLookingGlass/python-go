@@ -106,11 +106,8 @@ test: off
  
 build_script:
   - "cd %HOME%"
-  - "%COV% run -a test.py
+  - "%COV% run test.py
 
 on_success:
-  - "dir"
-  - "%COV% combine"
   - "%COV% xml -i"
-  - "dir"
   - "%RUN% -c \"import codecov; codecov.main(token='0e6a718b-9fc6-4717-a8cf-af5b15b4e140')\""
