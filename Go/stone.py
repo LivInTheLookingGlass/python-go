@@ -282,7 +282,7 @@ class stone():
                     return False
         return True
 
-    def can_be_uncapturable(self, moves, passed_board=None):
+    def can_be_uncapturable(self, moves, passed_board=None, silent=False):
         """Serially brute forces every combination of moves up to x to see if a group can be made uncapturable
         Warning: This is blocking, and can take a long time at depths >= 4
         Warning: This makes a copy of the board for each level of depth"""
@@ -294,7 +294,8 @@ class stone():
             raise ValueError("You can't call this without an associated board")
         if not passed_board[self.coord].is_capturable():
             # If the current configuration is uncapturable, you're done
-            print(passed_board)
+            if not silent:
+                print(passed_board)
             return True
         if moves > 0:
             # If you have moves left, recurse for every move to a direct neighbor
@@ -309,7 +310,7 @@ class stone():
                     b.place(self.color, coord[0], coord[1], turn_override=True)
                 except:
                     return False
-                if self.can_be_uncapturable(moves - 1, b):
+                if self.can_be_uncapturable(moves - 1, b, silent):
                     return True
         # Otherwise return False
         return False
