@@ -76,19 +76,19 @@ class board():
             return (grid.index(x), grid.index(y))
             
         for line in lines:
-            if 'AB[' in line:
+            if 'AB[' == line[:3]:
                 coord = translate_coord(line[3:5])
                 b.__place__('black', *coord)
                 b.move_history += ("add", "black", coord[0], coord[1])
-            elif 'AW[' in line:
+            elif 'AW[' == line[:3]:
                 coord = translate_coord(line[3:5])
                 b.__place__('white', *coord)
                 b.move_history += ("add", "white", coord[0], coord[1])
-            elif 'B[' in line:
+            elif 'B[' == line[:2]:
                 b.place('black', *translate_coord(line[2:4]))
-            elif 'W[' in line:
+            elif 'W[' == line[:2]:
                 b.place('white', *translate_coord(line[2:4]))
-            elif 'AE[' in line:
+            elif 'AE[' == line[:3]:
                 coord = translate_coord(line[3:5])
                 b.__remove__(*coord)
                 b.move_history += ("remove", coord[0], coord[1])
@@ -224,39 +224,6 @@ class board():
             s['white'] += self.komi
             return s
 
-    def territory_score(self):
-        grid = [['-' for y in range(self.sizey + 1)] for x in range(self.sizex + 1)]
-        for x in range(self.sizex + 1):
-            for y in range(self.sizey + 1):
-                if self[x, y]:
-                    grid[x][y] = self[x, y].color[0]
-        for count in range(len(grid) * 2):
-            for x in range(len(grid)):
-                for y in range(len(grid[0])):
-                    if grid[x][y] == "-":
-                        neighbors = []
-                        neighbors.append(grid[max(0, x-1)][y])                 # left
-                        neighbors.append(grid[min(len(grid)-1, x+1)][y])       # right
-                        neighbors.append(grid[x][max(0, y-1)])                 # up
-                        neighbors.append(grid[x][min(len(grid[0])-1, y+1)])    # down
-                        if 'w' in neighbors and 'b' in neighbors:
-                            continue
-                        elif not ('w' in neighbors or 'b' in neighbors):
-                            continue
-                        elif 'w' in neighbors:
-                            grid[x][y] = 'w'
-                        else:
-                            grid[x][y] = 'b'
-        s = self.prisoners.copy()
-        s['white'] += self.komi
-        for x in range(len(grid)):
-            for y in range(len(grid)):
-                if grid[x][y] == 'w':
-                    s['white'] += 1
-                elif grid[x][y] == 'b':
-                    s['black'] += 1
-        return s
-
     def test_ko(self, x, y):
         if self[x, y].is_captured() and True in [piece.is_captured() and piece.thickness() == 1 for piece in self[x,y].neighbors()]:
             if self.ko:
@@ -318,7 +285,7 @@ class board():
                 if (x, y) not in group:
                     if not self[x,y] and self.is_surrounded(x,y):
                         group.update(self.is_surrounded(x,y))
-                    elif self[x,y] and not self[x,y].is_capturable():
+                    elif self[x,y] and not self[x,y].can_be_uncapturable(1, silent=True):
                         group.update([s.coord for s in self[x,y].connected()])
         return group
 
