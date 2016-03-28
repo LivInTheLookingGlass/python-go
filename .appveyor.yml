@@ -106,7 +106,7 @@ build_script:
   - "cd %HOME%"
   - "%COV% run -a test.py
   
-  on_success:
+on_success:
   - "dir"
   - "%COV% combine"
   - "%COV% xml -i"
