@@ -101,6 +101,8 @@ install:
   - "%PYPY%"
   - "%PIP% install codecov"
   - "cd %HOME%"
+
+test: off
  
 build_script:
   - "cd %HOME%"
