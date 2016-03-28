@@ -25,6 +25,7 @@ def test_num_eyes():
     status = status and test_ones()
     status = status and test_twos()
     status = status and test_threes()
+    status = status and test_fours()
     return status
 
 def test_nones():
