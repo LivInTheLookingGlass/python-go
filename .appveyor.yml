@@ -86,8 +86,9 @@ install:
   - "%PYPY%"
   - "%PIP% install codecov"
   - "cd %HOME%"
-test_script:
+build:
   - "cd %HOME%"
+test_script:
   - "%COV% run --omit=Go/tests/*,test.py test.py"
 on_success:
   - "%COV% xml -i"
