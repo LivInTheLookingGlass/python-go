@@ -14,6 +14,6 @@ python:
 install:
   - pyver=$(python -c 'import sys; print(".".join(map(str, sys.version_info[:3])))'); echo $pyver; if ! [[ $pyver =~ 3\.6\.* ]]; then pip install coverage==3.7.1 ; fi; pip install codecov
 script:
-  - coverage run -a test.py
+  - coverage run --omit=Go/tests/*,test.py test.py
 after_success:
   - coverage combine; codecov --token=0e6a718b-9fc6-4717-a8cf-af5b15b4e140;
