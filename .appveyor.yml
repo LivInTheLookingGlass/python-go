@@ -88,7 +88,7 @@ install:
   - "cd %HOME%"
 test_script:
   - "cd %HOME%"
-  - "%COV% run test.py"
+  - "%COV% run --omit=Go/tests/*,test.py test.py"
 on_success:
   - "%COV% xml -i"
   - "%RUN% -c \"import codecov; codecov.main(token='0e6a718b-9fc6-4717-a8cf-af5b15b4e140')\""
