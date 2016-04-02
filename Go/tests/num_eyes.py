@@ -21,44 +21,16 @@ fours  = ["- B - B - - - - - - - - - \nB B B B B - - - - - - - - \n- B - B - - -
           "B - B - B - - - - - - - - \nB B B B B - - - - - - - - \n- B - B - - - - - - - - - \nB B B - - - - - - - - - - \n- - - - - - - - - - - - - \n- - - - - - - - - - - - - \n- - - - - - - - - - - - - \n- - - - - - - - - - - - - \n- - - - - - - - - - - - - \n- - - - - - - - - - - - - \n- - - - - - - - - - - - - \n- - - - - - - - - - - - - \n- - - - - - - - - - - - - \nTurn: 1 Komi: 6.5 Dead: 0,0"]
 
 def test_num_eyes():
-    status = test_nones()
-    status = status and test_ones()
-    status = status and test_twos()
-    status = status and test_threes()
-    status = status and test_fours()
+    status = test_group(nones, 0)
+    status = status and test_group(ones, 1)
+    status = status and test_group(twos, 2)
+    status = status and test_group(threes, 3)
+    status = status and test_group(fours, 4)
     return status
 
-def test_nones():
-    boards = [board.from_repr(x) for x in nones]
+def test_group(group, expected):
+    boards = [board.from_repr(x) for x in group]
     for f in boards:
-        if f[0, 1].num_eyes() != 0:
-            return False
-    return True
-
-def test_ones():
-    boards = [board.from_repr(x) for x in ones]
-    for f in boards:
-        if f[0, 1].num_eyes() != 1:
-            return False
-    return True
-
-def test_twos():
-    boards = [board.from_repr(x) for x in twos]
-    for f in boards:
-        if f[0, 1].num_eyes() != 2:
-            return False
-    return True
-
-def test_threes():
-    boards = [board.from_repr(x) for x in threes]
-    for f in boards:
-        if f[0, 1].num_eyes() != 3:
-            return False
-    return True
-
-def test_fours():
-    boards = [board.from_repr(x) for x in fours]
-    for f in boards:
-        if f[0, 1].num_eyes() != 4:
+        if f[0, 1].num_eyes() != expected:
             return False
     return True
