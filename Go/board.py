@@ -38,8 +38,9 @@ class board():
                     b.__place__("black", x, y, True)
         b.turn = int(meta[1])
         b.komi = float(meta[3])
-        b.prisoners['black'] = int(meta[5].split(',')[0])
-        b.prisoners['white'] = int(meta[5].split(',')[1])
+        prisoners = meta[5].split(',')
+        prisoners = (int(prisoners[0]), int(prisoners[1]))
+        b.prisoners['black'], b.prisoners['white'] = prisoners
         return b
 
     @classmethod
