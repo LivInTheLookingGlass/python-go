@@ -1,5 +1,5 @@
 class stone():
-    def __init__(self, color, left=None, right=None, up=None, down=None, board=None, coord=(None,None)):
+    def __init__(self, color, left=None, right=None, up=None, down=None, board=None, coord=(None, None)):
         self.color = color
         if color == 'white':
             self.opposite_color = 'black'
@@ -19,7 +19,7 @@ class stone():
             self.down.up = self
         self.board = board
         self.coord = coord
-        
+
     def __repr__(self):
         string = "<" + self.color + " stone:"
         if self.coord != (None, None):
@@ -34,7 +34,7 @@ class stone():
         if self.down:
             string += " down=" + self.down.color
         return string + ">"
-    
+
     def __del__(self):
         self.cleanup()
 
@@ -53,10 +53,10 @@ class stone():
         for stone in remove:
             n.remove(stone)
         return n
-            
+
     def liberties(self):
         return 4 - len(self.neighbors())
-    
+
     def connected(self, so_far=[]):
         conn = so_far + [self]
         for i in self.neighbors():
@@ -70,16 +70,16 @@ class stone():
             if i not in conn:
                 conn = i.all_connected(so_far=conn)
         return conn
-    
+
     def thickness(self):
         return len(self.connected())
-    
+
     def is_captured(self):
         for i in self.connected():
             if i.liberties():
                 return False
         return True
-    
+
     def capture(self, override=False):
         if self.is_captured() or override:
             count = 0
