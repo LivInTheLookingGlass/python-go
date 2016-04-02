@@ -60,19 +60,23 @@ class server():
         elif req[0] == "history":
             handler.snd(req[0] + sep_sequence + json.dumps(self.board.move_history, 0))
         elif req[0] == "be_player":
-            if not self.black:
-                self.black = handler
-                handler.snd(req[0] + sep_sequence + "black")
-                print("Assigned black player")
-            elif not self.white and handler != self.black:
-                self.white = handler
-                handler.snd(req[0] + sep_sequence + "white")
-                print("Assigned white player")
-            else:
-                handler.snd(req[0] + sep_sequence + "spectator")
-                print("Rejected player")
+            handle_be_player(handler, req)
         else:
             handler.snd(req[0] + sep_sequence + "Unknown request")
+    
+    def handle_be_player(self, handler, req):
+        color = "spectator"
+        if not self.black:
+            self.black = handler
+            color = "black"
+            print("Assigned black player")
+        elif not self.white and handler != self.black:
+            self.white = handler
+            color = "white"
+            print("Assigned white player")
+        else:
+            print("Rejected player")
+        handler.snd(req[0] + sep_sequence + color)
 
     def handle_request(self, msg, handler):
         if handler in [self.black, self.white]:
