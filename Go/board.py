@@ -178,18 +178,17 @@ class board():
     def process(self, x, y, turn_override=False):
         """Process the rules for a specific move"""
         piece = self[x, y]
+        exception, msg = None, None
         if piece.color != self.whos_turn() and not turn_override:
-            self.__remove__(x, y)
-            self.move_history = self.move_history[:-1]
-            raise Exception("Illegal move--it's not your turn")
+            exception, msg = True, "Illegal move--it's not your turn"
         elif piece.is_captured() and True not in [n.is_captured() for n in piece.neighboring_enemies()]:
-            self.__remove__(x, y)
-            self.move_history = self.move_history[:-1]
-            raise IndexError("Illegal move--this is suicidal")
+            exception, msg = True, "Illegal move--this is suicidal"
         elif self.test_ko(x, y):
+            exception, msg = True, "Illegal move--ko prevents board loops"
+        if exception:
             self.__remove__(x, y)
             self.move_history = self.move_history[:-1]
-            raise IndexError("Illegal move--ko prevents board loops")
+            raise Exception(msg)
         for i in piece.neighboring_enemies():
             self.prisoners[self.whos_turn()] += i.capture(override=False)
         self.turn += 1
