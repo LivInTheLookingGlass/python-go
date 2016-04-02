@@ -39,27 +39,19 @@ class stone():
         self.cleanup()
 
     def neighbors(self):
-        n = []
-        if self.left:
-            n += [self.left]
-        if self.right:
-            n += [self.right]
-        if self.up:
-            n += [self.up]
-        if self.down:
-            n += [self.down]
+        n = [self.left, self.right, self.up, self.down]
+        while n.count(None):
+            n.remove(None)
         return n
 
     def neighboring_enemies(self):
-        n = []
-        if self.left and self.left.color != self.color:
-            n += [self.left]
-        if self.right and self.right.color != self.color:
-            n += [self.right]
-        if self.up and self.up.color != self.color:
-            n += [self.up]
-        if self.down and self.down.color != self.color:
-            n += [self.down]
+        n = self.neighbors()
+        remove = []
+        for stone in n:
+            if stone.color != self.color:
+                remove.append(stone)
+        for stone in remove:
+            n.remove(stone)
         return n
             
     def liberties(self):
