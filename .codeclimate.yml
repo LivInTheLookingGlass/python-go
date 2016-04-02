@@ -3,6 +3,22 @@ languages:
   JavaScript: true
   PHP: true
   Python: true
+engines:
+  pep8:
+    enabled: true
+  fixme:
+    enabled: true
+  duplication:
+    enabled: true
+    config:
+      languages:
+      - ruby
+      - javascript
+      - php
+      - python
+ratings:
+   paths:
+   - "**.py"
 exclude_paths:
 - "README.md"
 - "installpypy2.ps1"
