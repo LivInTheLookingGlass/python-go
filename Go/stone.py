@@ -48,7 +48,7 @@ class stone():
         n = self.neighbors()
         remove = []
         for stone in n:
-            if stone.color != self.color:
+            if stone.color == self.color:
                 remove.append(stone)
         for stone in remove:
             n.remove(stone)
