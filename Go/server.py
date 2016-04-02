@@ -55,13 +55,8 @@ class server():
             self.process_spectator_request(player, req)
 
     def process_spectator_request(self, handler, req):
-        if req[0] == "score":
-            handler.snd(req[0] + sep_sequence + str(self.board.score(False)))
-        elif req[0] == "territorial_score":
-            handler.snd(req[0] + sep_sequence + str(self.board.score(True)))
-        elif req[0] == "board":
-            print(self.board)
-            handler.snd(req[0] + sep_sequence + str(self.board))
+        if req[0] in ["score", "territorial_score"]:
+            handler.snd(req[0] + sep_sequence + str(self.board.score(req[0] == "territorial_score")))
         elif req[0] == "history":
             handler.snd(req[0] + sep_sequence + json.dumps(self.board.move_history, 0))
         elif req[0] == "be_player":
@@ -117,6 +112,6 @@ class ChatServer(asyncore.dispatcher):
         pair = self.accept()
         if pair is not None:
             sock, addr = pair
-            print 'Incoming connection from %s' % repr(addr)
+            print('Incoming connection from ', repr(addr))
             handler = ChatHandler(sock, self.server)
             handlers.append(handler)

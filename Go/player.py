@@ -48,6 +48,8 @@ class player():
 
     def join_game(self):
         self.send("be_player")
+        if self.color in ["black", "white"]:
+        	self.get_board()
 
     def make_move(self, x, y):
     	if self.color not in ["black", "white"]:
@@ -73,7 +75,7 @@ class ChatClient(asynchat.async_chat):
  
     def found_terminator(self):
         msg = ''.join(self.buffer)
-        print 'Received:', msg
+        print('Received:', msg)
         self.buffer = []
         self.out_queue.put(msg)
 
