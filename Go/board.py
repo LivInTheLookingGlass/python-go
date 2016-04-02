@@ -1,9 +1,10 @@
 colors = ["white", "black", "edge"]
 from .stone import stone
 
+
 class board():
     def __init__(self, sizex, sizey, komi=6.5):
-        """Initializes a board of a specified size. To enter a known state, use board.from_repr()"""
+        """Initializes a board of a specified size."""
         self.sizex = sizex - 1
         self.sizey = sizey - 1
         self.size = str(sizex) + 'x' + str(sizey)
@@ -61,19 +62,20 @@ class board():
             f.read
         except:
             f = open(f, 'r')
-        lines = f.read().replace('\r', '').replace('\n','').split(';')
+        lines = f.read().replace('\r', '').replace('\n', '').split(';')
         meta = lines[1]
         size = meta.split('SZ[')[1].split(']')[0]
         komi = meta.split('KM[')[1].split(']')[0]
         if "Japanese" not in meta or "japanese" not in meta or "JAPANESE" not in meta:
             print("Warning: This game may have been in a different ruleset")
         b = cls(int(size), int(size), float(komi))
+
         def translate_coord(string):
             grid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
             x = string[0]
             y = string[1]
             return (grid.index(x), grid.index(y))
-            
+
         for line in lines:
             if 'AB[' == line[:3]:
                 coord = translate_coord(line[3:5])
@@ -91,7 +93,7 @@ class board():
                 coord = translate_coord(line[3:5])
                 b.__remove__(*coord)
                 b.move_history += ("remove", coord[0], coord[1])
-        return b                
+        return b
 
     def __hash__(self):
         """Returns a unique integer for each possible board configuration"""
@@ -134,11 +136,11 @@ class board():
     def highlight(self, group=[]):
         string = self.__pos__().replace('W', 'w').replace('B', 'b')
         lines = string.split('\n')
-        symbols = {"w": "W", "b": "B", "-": "#"}
+        high = {"w": "W", "b": "B", "-": "#"}
         for coord in group:
             x = coord[0]
             y = coord[1]
-            lines[y] = lines[y][0:x*2] + symbols[lines[y][x*2]] + lines[y][x*2+1:]
+            lines[y] = lines[y][:x*2] + high[lines[y][x*2]] + lines[y][x*2+1:]
         string = ""
         for line in lines:
             string += line + "\n"
@@ -164,10 +166,9 @@ class board():
             down = self[x, y+1]
         else:
             down = stone("edge")
-        self.__field__[y][x] = stone(color, left=left, right=right, up=up, 
+        self.__field__[y][x] = stone(color, left=left, right=right, up=up,
                                       down=down, board=self, coord=(x, y))
         self.move_history += [(color, x, y, turn_override)]
-
 
     def place(self, color, x, y, turn_override=False):
         """Place a stone of a specific color on the board"""
@@ -223,7 +224,7 @@ class board():
             return s
 
     def test_ko(self, x, y):
-        if self[x, y].is_captured() and True in [piece.is_captured() and piece.thickness() == 1 for piece in self[x,y].neighbors()]:
+        if self[x, y].is_captured() and True in [piece.is_captured() and piece.thickness() == 1 for piece in self[x, y].neighbors()]:
             if self.ko:
                 return True
             else:
@@ -236,15 +237,15 @@ class board():
         """If a blank group is surrounded, and does not touch three sides, return the set of coordinates. Otherwise return False"""
         if isinstance(self[x, y], stone):
             raise TypeError("Checking stones is not yet supported. Use stone.group_liberties as a proxy")
-        to_check = set([(x,y)])
-        group = set([(x,y)])
+        to_check = set([(x, y)])
+        group = set([(x, y)])
         # First gather a set of the blank stones in question
         while len(to_check):
             next_round = set()
             for test in to_check:
                 x = test[0]
                 y = test[1]
-                for coord in [(x+1, y),(x-1, y),(x, y+1),(x, y-1)]:
+                for coord in [(x+1, y), (x-1, y), (x, y+1), (x, y-1)]:
                     if coord in group or \
                        coord[0] not in range(0, self.sizex + 1) or \
                        coord[1] not in range(0, self.sizey + 1) or \
@@ -265,7 +266,7 @@ class board():
         for test in to_check:
             x = test[0]
             y = test[1]
-            for coord in [(x+1, y),(x-1, y),(x, y+1),(x, y-1)]:
+            for coord in [(x+1, y), (x-1, y), (x, y+1), (x, y-1)]:
                 if coord[0] not in range(0, self.sizex + 1) or \
                    coord[1] not in range(0, self.sizey + 1) or \
                    not self[coord]:
@@ -281,10 +282,10 @@ class board():
         for y in range(self.sizey + 1):
             for x in range(self.sizex + 1):
                 if (x, y) not in group:
-                    if not self[x,y] and self.is_surrounded(x,y):
-                        group.update(self.is_surrounded(x,y))
-                    elif self[x,y] and not self[x,y].can_be_uncapturable(1, silent=True):
-                        group.update([s.coord for s in self[x,y].connected()])
+                    if not self[x, y] and self.is_surrounded(x, y):
+                        group.update(self.is_surrounded(x, y))
+                    elif self[x, y] and not self[x, y].can_be_uncapturable(1, silent=True):
+                        group.update([s.coord for s in self[x, y].connected()])
         return group
 
     def print_easily_scored(self):
@@ -294,7 +295,7 @@ class board():
         anti_group = self.get_easily_scored()
         group = set()
         for y in range(self.sizey + 1):
-            for x in range(self.sizex+ 1):
+            for x in range(self.sizex + 1):
                 if (x, y) not in anti_group:
                     group.add((x, y))
         return group
