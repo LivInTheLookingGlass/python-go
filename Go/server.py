@@ -1,10 +1,11 @@
 from .board import board
 import asynchat
 import asyncore
+import json
 import socket
-import pickle
 
 chat_room = {}
+handlers = []
 
 sep_sequence = "\x1c\x1d\x1e\x1f"
 end_sequence = sep_sequence[::-1]
@@ -41,12 +42,15 @@ class server():
 
     def process_player_request(self, player, req):
         if req[0] == 'move':
-            move = self.make_move(self.color(player), int(req[1]), int(req[2]))
+            grid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            x = req[1]
+            y = req[2]
+            move = self.make_move(self.color(player), grid.index(x), grid.index(y))
             player.snd(req[0] + sep_sequence + str(move))
             if move == 'True':
-                board = pickle.dumps(self.board.move_history, 0)
-                self.white.snd("history" + sep_sequence + board)
-                self.black.snd("history" + sep_sequence + board)
+                board = json.dumps(self.board.move_history)
+                for client in handlers:
+                	client.snd("history" + sep_sequence + board)
         else:
             self.process_spectator_request(player, req)
 
@@ -59,7 +63,7 @@ class server():
             print(self.board)
             handler.snd(req[0] + sep_sequence + str(self.board))
         elif req[0] == "history":
-            handler.snd(req[0] + sep_sequence + pickle.dumps(self.board.move_history, 0))
+            handler.snd(req[0] + sep_sequence + json.dumps(self.board.move_history, 0))
         elif req[0] == "be_player":
             if not self.black:
                 self.black = handler
@@ -70,7 +74,7 @@ class server():
                 handler.snd(req[0] + sep_sequence + "white")
                 print("Assigned white player")
             else:
-                handler.snd(req[0] + sep_sequence + "no")
+                handler.snd(req[0] + sep_sequence + "spectator")
                 print("Rejected player")
         else:
             handler.snd(req[0] + sep_sequence + "Unknown request")
@@ -115,3 +119,4 @@ class ChatServer(asyncore.dispatcher):
             sock, addr = pair
             print 'Incoming connection from %s' % repr(addr)
             handler = ChatHandler(sock, self.server)
+            handlers.append(handler)

@@ -1,6 +1,7 @@
 from .board import board
 import asynchat
 import asyncore
+import json
 import socket
 import threading
 import sys
@@ -19,6 +20,7 @@ class player():
         self.server = ChatClient(host, port, self.out_queue, self.in_queue)
         self.comm = None
         self.board = None
+        self.color = "spectator"
 
     def start(self):
         self.comm = threading.Thread(target=asyncore.loop)
@@ -26,17 +28,34 @@ class player():
         self.comm.start()
 
     def process_queue(self):
+        import time
+        time.sleep(0.1)
         while not self.in_queue.empty():
             msg = self.in_queue.get()
             req = msg.split(sep_sequence)
             print("Response to request " + req[0] + ": " + str(req[1:]))
+            if req[0] == "history":
+                self.board = board.from_history(json.loads(req[1]))
+            elif req[0] == "be_player":
+                self.color = req[1]
 
     def send(self, msg):
         self.out_queue.put(str(msg) + end_sequence)
+        self.process_queue()
 
     def get_board(self):
         self.send("history")
-        self.process_queue()
+
+    def join_game(self):
+        self.send("be_player")
+
+    def make_move(self, x, y):
+    	if self.color not in ["black", "white"]:
+    		raise Exception("You are not a participant in this game")
+    	if self.board.test_placement(self.color, x, y):
+    		grid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    		sx, sy = grid[x], grid[y]
+    		self.send("move" + sep_sequence + sx + sep_sequence + sy)
 
 
 class ChatClient(asynchat.async_chat):
@@ -44,7 +63,7 @@ class ChatClient(asynchat.async_chat):
         asynchat.async_chat.__init__(self)
         self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connect((host, port))
-        self.set_terminator(end_sequence)                                            # End of text, End of tx, End of tx block, End of tx, End of text
+        self.set_terminator(end_sequence)
         self.buffer = []
         self.out_queue = out_queue
         self.in_queue = in_queue
