@@ -7,7 +7,7 @@ engines:
   pep8:
     enabled: true
  radon: 
-  enabled: true
+    enabled: true
   fixme:
     enabled: true
   duplication:
