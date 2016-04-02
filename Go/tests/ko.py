@@ -17,8 +17,8 @@ def test_ko_activation():
     f = board.from_history(standard)
     try:
         f.place('black', 2, 1)
-    except IndexError:
-        return True
+    except Exception as e:
+        return e.args[0] == "Illegal move--ko prevents board loops"
     return False
 
 def test_ko_resolution():
@@ -27,8 +27,8 @@ def test_ko_resolution():
     f.place('white', 4, 5)
     try:
         f.place('black', 2, 1)
-    except IndexError:
-        return False
+    except Exception as e:
+        return e.args[0] != "Illegal move--ko prevents board loops"
     return True
 
 def test_ko_exception():
@@ -36,6 +36,6 @@ def test_ko_exception():
     try:
         f.place('white', 2, 2)
         f.place('black', 2, 1)
-    except IndexError:
-        return False
+    except Exception as e:
+        return e.args[0] != "Illegal move--ko prevents board loops"
     return True
