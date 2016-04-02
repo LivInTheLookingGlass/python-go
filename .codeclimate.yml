@@ -6,8 +6,6 @@ languages:
 engines:
   pep8:
     enabled: true
- radon: 
-    enabled: true
   fixme:
     enabled: true
   duplication:
