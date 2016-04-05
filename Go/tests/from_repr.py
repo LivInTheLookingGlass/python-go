@@ -1,9 +1,11 @@
 from ..board import board
 
+
 def test_from_repr():
     status = test_from_repr_setting()
     status = status and test_from_repr_inequality()
     return status
+
 
 def test_from_repr_setting():
     f = board(13, 13)
@@ -24,6 +26,7 @@ def test_from_repr_setting():
     status = status and f.turn == g.turn
     status = status and f.size == g.size
     return status
+
 
 def test_from_repr_inequality():
     f = board(13, 13)

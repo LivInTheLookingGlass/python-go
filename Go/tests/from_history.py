@@ -1,8 +1,10 @@
 from ..board import board
 
+
 def test_from_history():
     status = test_from_history_equality()
     return status
+
 
 def test_from_history_equality():
     f = board(13, 13)

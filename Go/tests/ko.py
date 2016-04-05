@@ -7,11 +7,13 @@ exception = [(13, 13, 6.5), ('black', 1, 0), ('white', 2, 0), ('black', 0, 1), (
                             ('black', 3, 2), ('white', 5, 5), ('black', 1, 3), ('white', 4, 5), 
                             ('black', 2, 3)]
 
+
 def test_ko():
     status = test_ko_activation()
     status = status and test_ko_resolution()
     status = status and test_ko_exception()
     return status
+
 
 def test_ko_activation():
     f = board.from_history(standard)
@@ -20,6 +22,7 @@ def test_ko_activation():
     except Exception as e:
         return e.args[0] == "Illegal move--ko prevents board loops"
     return False
+
 
 def test_ko_resolution():
     f = board.from_history(standard)
@@ -30,6 +33,7 @@ def test_ko_resolution():
     except Exception as e:
         return e.args[0] != "Illegal move--ko prevents board loops"
     return True
+
 
 def test_ko_exception():
     f = board.from_history(exception)

@@ -10,6 +10,7 @@ handlers = []
 sep_sequence = "\x1c\x1d\x1e\x1f"
 end_sequence = sep_sequence[::-1]
 
+
 class server():
     def __init__(self, x, y, komi=6.5, port=44444):
         self.chat = ChatServer("0.0.0.0", port, self)
@@ -50,7 +51,7 @@ class server():
             if move == 'True':
                 board = json.dumps(self.board.move_history)
                 for client in handlers:
-                	client.snd("history" + sep_sequence + board)
+					client.snd("history" + sep_sequence + board)
         else:
             self.process_spectator_request(player, req)
 
@@ -60,10 +61,11 @@ class server():
         elif req[0] == "history":
             handler.snd(req[0] + sep_sequence + json.dumps(self.board.move_history, 0))
         elif req[0] == "be_player":
-            self.handle_be_player(handler, req)
+			self.handle_be_player(handler, req)
         elif req[0] == "chat":
-        	for hand in handlers:
-        		hand.snd(sep_sequence.join(req))
+        	import operator
+        	msg = sep_sequence.join(req)
+        	map(operator.methodcaller('snd', msg), handlers)
         else:
             handler.snd(req[0] + sep_sequence + "Unknown request")
     
@@ -86,7 +88,8 @@ class server():
             self.process_player_request(handler, msg.split(sep_sequence))
         else:
             self.process_spectator_request(handler, msg.split(sep_sequence))
- 
+
+
 class ChatHandler(asynchat.async_chat):
     def __init__(self, sock, server):
         asynchat.async_chat.__init__(self, sock=sock, map=chat_room)
@@ -96,7 +99,7 @@ class ChatHandler(asynchat.async_chat):
  
     def collect_incoming_data(self, data):
         self.buffer.append(data)
- 
+
     def found_terminator(self):
         msg = ''.join(self.buffer)
         print('Received:', msg)
@@ -106,7 +109,8 @@ class ChatHandler(asynchat.async_chat):
     def snd(self, msg):
         print(str(msg) + end_sequence)
         self.push(str(msg) + end_sequence)
- 
+
+
 class ChatServer(asyncore.dispatcher):
     def __init__(self, host, port, server):
         asyncore.dispatcher.__init__(self, map=chat_room)
@@ -114,7 +118,7 @@ class ChatServer(asyncore.dispatcher):
         self.bind((host, port))
         self.listen(5)
         self.server = server
- 
+
     def handle_accept(self):
         pair = self.accept()
         if pair is not None:

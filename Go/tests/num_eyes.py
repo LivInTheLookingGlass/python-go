@@ -20,6 +20,7 @@ threes = ["B - B - - - - - - - - - - \nB B B B B - - - - - - - - \n- B - B - - -
 fours  = ["- B - B - - - - - - - - - \nB B B B B - - - - - - - - \n- B - B - - - - - - - - - \nB B B - - - - - - - - - - \n- - - - - - - - - - - - - \n- - - - - - - - - - - - - \n- - - - - - - - - - - - - \n- - - - - - - - - - - - - \n- - - - - - - - - - - - - \n- - - - - - - - - - - - - \n- - - - - - - - - - - - - \n- - - - - - - - - - - - - \n- - - - - - - - - - - - - \nTurn: 1 Komi: 6.5 Dead: 0,0",
           "B - B - B - - - - - - - - \nB B B B B - - - - - - - - \n- B - B - - - - - - - - - \nB B B - - - - - - - - - - \n- - - - - - - - - - - - - \n- - - - - - - - - - - - - \n- - - - - - - - - - - - - \n- - - - - - - - - - - - - \n- - - - - - - - - - - - - \n- - - - - - - - - - - - - \n- - - - - - - - - - - - - \n- - - - - - - - - - - - - \n- - - - - - - - - - - - - \nTurn: 1 Komi: 6.5 Dead: 0,0"]
 
+
 def test_num_eyes():
     status = test_group(nones, 0)
     status = status and test_group(ones, 1)
@@ -27,6 +28,7 @@ def test_num_eyes():
     status = status and test_group(threes, 3)
     status = status and test_group(fours, 4)
     return status
+
 
 def test_group(group, expected):
     boards = [board.from_repr(x) for x in group]

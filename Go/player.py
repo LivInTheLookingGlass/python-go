@@ -13,6 +13,7 @@ else:
 sep_sequence = "\x1c\x1d\x1e\x1f"
 end_sequence = sep_sequence[::-1]
 
+
 class player():
     def __init__(self, host, port):
         self.in_queue = Queue()
@@ -40,8 +41,8 @@ class player():
                 self.color = req[1]
 
     def chat(self, msg):
-    	self.out_queue.put("chat" + sep_sequence + str(msg) + end_sequence)
-    	self.process_queue()
+        self.out_queue.put("chat" + sep_sequence + str(msg) + end_sequence)
+        self.process_queue()
 
     def send(self, msg):
         self.out_queue.put(str(msg) + end_sequence)
@@ -53,15 +54,15 @@ class player():
     def join_game(self):
         self.send("be_player")
         if self.color in ["black", "white"]:
-        	self.get_board()
+            self.get_board()
 
     def make_move(self, x, y):
-    	if self.color not in ["black", "white"]:
-    		raise Exception("You are not a participant in this game")
-    	if self.board.test_placement(self.color, x, y):
-    		grid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    		sx, sy = grid[x], grid[y]
-    		self.send("move" + sep_sequence + sx + sep_sequence + sy)
+        if self.color not in ["black", "white"]:
+            raise Exception("You are not a participant in this game")
+        if self.board.test_placement(self.color, x, y):
+            grid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            sx, sy = grid[x], grid[y]
+            self.send("move" + sep_sequence + sx + sep_sequence + sy)
 
 
 class ChatClient(asynchat.async_chat):
@@ -73,10 +74,10 @@ class ChatClient(asynchat.async_chat):
         self.buffer = []
         self.out_queue = out_queue
         self.in_queue = in_queue
- 
+
     def collect_incoming_data(self, data):
         self.buffer.append(data)
- 
+
     def found_terminator(self):
         msg = ''.join(self.buffer)
         # print('Received:', msg)
