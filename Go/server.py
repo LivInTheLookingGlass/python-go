@@ -60,7 +60,10 @@ class server():
         elif req[0] == "history":
             handler.snd(req[0] + sep_sequence + json.dumps(self.board.move_history, 0))
         elif req[0] == "be_player":
-            handle_be_player(handler, req)
+            self.handle_be_player(handler, req)
+        elif req[0] == "chat":
+        	for hand in handlers:
+        		hand.snd(sep_sequence.join(req))
         else:
             handler.snd(req[0] + sep_sequence + "Unknown request")
     

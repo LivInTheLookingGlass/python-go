@@ -33,11 +33,15 @@ class player():
         while not self.in_queue.empty():
             msg = self.in_queue.get()
             req = msg.split(sep_sequence)
-            print("Response to request " + req[0] + ": " + str(req[1:]))
+            print(req[0] + ": " + str(req[1:]))
             if req[0] == "history":
                 self.board = board.from_history(json.loads(req[1]))
             elif req[0] == "be_player":
                 self.color = req[1]
+
+    def chat(self, msg):
+    	self.out_queue.put("chat" + sep_sequence + str(msg) + end_sequence)
+    	self.process_queue()
 
     def send(self, msg):
         self.out_queue.put(str(msg) + end_sequence)
@@ -75,15 +79,12 @@ class ChatClient(asynchat.async_chat):
  
     def found_terminator(self):
         msg = ''.join(self.buffer)
-        print('Received:', msg)
+        # print('Received:', msg)
         self.buffer = []
         self.out_queue.put(msg)
 
     def writable(self):
-        count = 0
         while not self.in_queue.empty():
             msg = self.in_queue.get()
-            print(count, msg)
-            count += 1
             self.push(msg)
         return True
