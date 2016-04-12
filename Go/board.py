@@ -95,6 +95,9 @@ class board():
                 b.move_history += ("remove", coord[0], coord[1])
         return b
 
+    def copy(self):
+        return board.from_history(self.move_history)
+
     def __hash__(self):
         """Returns a unique integer for each possible board configuration"""
         return hash((self.__pos__(), tuple(self.move_history)))
@@ -195,8 +198,15 @@ class board():
         return True
 
     def test_placement(self, color, x, y):
-        brd = board.from_history(self.move_history)
-        return brd.place(color, x, y, turn_override=True)
+        try:
+            brd = board.from_history(self.move_history)
+            if brd.place(color, x, y, turn_override=True):
+                return {'white': brd.prisoners['white'] - self.prisoners['white'],
+                        'black': brd.prisoners['black'] - self.prisoners['black']}
+            else:
+                return False
+        except:
+            return False
 
     def __remove__(self, x, y):
         """Remove the piece at the given coordinates"""
@@ -276,6 +286,18 @@ class board():
         if len(colors) != 1:
             return False
         return group
+
+    def is_eye(self, x, y):
+        if self[x, y]:
+            return False
+        for pos in [(x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)]:
+            if pos[0] not in range(0, self.sizex + 1):
+                break
+            if pos[1] not in range(0, self.sizey + 1):
+                break
+            if self[pos] and self[pos].is_eye((x, y)):
+                return True
+        return False
 
     def get_easily_scored(self):
         group = set()
