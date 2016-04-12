@@ -1,4 +1,4 @@
-using_multiprocessing = True
+using_multiprocessing = False
 
 if using_multiprocessing:
 	import multiprocessing
@@ -10,21 +10,50 @@ else:
 
 
 class Neural_Network(object):
-	def __init__(self, arch, sigmoid=True, convolutional=False):
+	def __init__(self, arch, sigmoid=True, convolutional=0):
 		self.sigmoid = sigmoid
 		self.convolutional = convolutional
 		self.layers = []
-		self.inputs = [Value('f', 0) for i in range(arch[0])]
-		self.readies = [Value('b', 0) for i in range(arch[0])]
+		self.inputs = []
+		self.readies = []
 		for i in range(len(arch)):
 			self.layers.append([])
-			for j in range(arch[i]):
-				if convolutional:
-					print("Convolutional networks are not yet supported")
-				elif i > 0:
-					self.layers[-1].append(Neuron([n.output for n in self.layers[-2]], readies=[n.ready for n in self.layers[-2]], sigmoid=sigmoid))
+			if convolutional:
+				if not isinstance(arch[i], tuple) or len(arch[i]) != 2:
+					raise TypeError("Architecture for convolutional networks must be fed as 2-item tuples. Arbitrary dimensions will be supported later\
+									(Example: [(9,9), (5, 5), (3, 3), (1, 1)]")
+
+				def distance(p0, p1):
+					import math
+					if len(p0) != len(p1):
+						raise IndexError("Points do not have matching dimensionality")
+					return math.sqrt(sum([(i - j)**2 for i, j in zip(p0, p1)]))
+
+				if i > 0:
+					print(i)
+					ratiox = arch[i - 1][0] / float(arch[i][0])
+					ratioy = arch[i - 1][1] / float(arch[i][1])
+					for x in range(arch[i][0]):
+						for y in range(arch[i][1]):
+							# print(i, y + x * arch[i][1])
+							indexes = [j for j in range(len(self.layers[-2])) if distance((x * ratiox, y * ratioy), (j / arch[i - 1][1], j % arch[i - 1][1])) <= convolutional]
+							outputs = [self.layers[-2][j].output for j in indexes]
+							readies = [self.layers[-2][j].ready for j in indexes]
+							self.layers[-1].append(Neuron(outputs, readies=readies, sigmoid=sigmoid))
 				else:
-					self.layers[-1].append(Neuron([self.inputs[j]], readies=[self.readies[j]], sigmoid=sigmoid))
+					from operator import mul
+					for j in range(reduce(mul, arch[i])):	# n-dimension support achieved
+						self.inputs.append(Value('f', 0))
+						self.readies.append(Value('b', 0))
+						self.layers[-1].append(Neuron([self.inputs[j]], readies=[self.readies[j]], sigmoid=sigmoid))
+			else:
+				for j in range(arch[i]):
+					if i > 0:
+						self.layers[-1].append(Neuron([n.output for n in self.layers[-2]], readies=[n.ready for n in self.layers[-2]], sigmoid=sigmoid))
+					else:
+						self.inputs.append(Value('f', 0))
+						self.readies.append(Value('b', 0))
+						self.layers[-1].append(Neuron([self.inputs[j]], readies=[self.readies[j]], sigmoid=sigmoid))
 
 	def feed(self, inputs, multiple=False):
 		if multiple:
@@ -38,7 +67,8 @@ class Neural_Network(object):
 
 	def __feed__(self, inputs):
 		if len(inputs) != len(self.inputs):
-			raise IndexError("Incorrect length of inputs")
+			raise IndexError("Incorrect length of inputs\
+							  Expected " + str(len(self.inputs)) + ". Got " + str(len(inputs)))
 		for i in range(len(inputs)):
 			self.inputs[i].value = inputs[i]
 			self.readies[i].value = True
