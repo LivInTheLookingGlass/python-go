@@ -95,6 +95,38 @@ class Neural_Network(object):
 				for n in layer:
 					n.thread.terminate()
 
+	def get_serialized(self):
+		serialized = [[self.sigmoid, self.convolutional]]
+		for i in range(len(self.layers)):
+			serialized.append([])
+			for x in self.layers[i]:
+				weights = [v for v in x.weights]
+				biases = [v for v in x.biases]
+				serialized[i + 1].append([weights, biases])
+		return serialized
+
+	def dump(self, protocol=2):
+		import pickle
+		return pickle.dumps(self.get_serialized(), protocol)
+
+	@classmethod
+	def load_serialized(cls, lst):
+		meta = lst[0]
+		lst = lst[1:]
+		arch = [len(x) for x in lst]
+		net = cls(arch, sigmoid=meta[0], convolutional=meta[1])
+		for i in range(len(net.layers)):
+			for j in range(len(net.layers[i])):
+				for k in range(len(net.layers[i][j].weights)):
+					net.layers[i][j].weights[k] = lst[i][j][0][k]
+					net.layers[i][j].biases[k] = lst[i][j][1][k]
+		return net
+
+	@classmethod
+	def load(cls, string):
+		import pickle
+		return cls.load_serialized(pickle.loads(string))
+
 
 class Neuron(object):
 	def __init__(self, inputs, readies=[], weights=None, biases=None, sigmoid=True):
@@ -119,9 +151,10 @@ class Neuron(object):
 			self.thread = False
 
 	def process(self):
-		while self.readies != [] and False in [x.value for x in self.readies]:
+		while self.readies != [] and False in (x.value for x in self.readies):
 			import time
-			time.sleep(0.1)
+			self.ready.value = False
+			time.sleep(0.01)
 		values = [self.weights[i] * self.inputs[i].value + self.biases[i] for i in range(len(self.inputs))]
 		self.output.value = self.sigmoid(sum(values))
 		self.ready.value = True
