@@ -135,30 +135,44 @@ class Neural_Network(object):
 		for i in range(len(arch)):
 			self.layers.append([])
 			if convolutional:
-				if not isinstance(arch[i], tuple) or len(arch[i]) != 2:
-					raise TypeError("Architecture for convolutional networks must be fed as 2-item tuples. Arbitrary dimensions will be supported later\
-									(Example: [(9,9), (5, 5), (3, 3), (1, 1)]")
+				if not isinstance(arch[i], tuple):
+					raise TypeError("Architecture for convolutional networks must be fed as tuples. (Example: [(9,9), (5, 5), (3, 3), (1, 1)]")
+				if False in (len(x) == len(arch[i]) for x in arch):
+					raise ValueError("All layers must have matching dimensionality; In other words, if the first layer is a two item tuple, they all must be two item tuples.")
 
-				def distance(p0, p1):
+				def distance(p0, p1, ratios=None):
 					import math
 					if len(p0) != len(p1):
+						print(p0, p1)
 						raise IndexError("Points do not have matching dimensionality")
-					return math.sqrt(sum([(i - j)**2 for i, j in zip(p0, p1)]))
+					if not ratios:
+						ratios = [1] * len(p0)
+					return math.sqrt(sum([(i - j * k)**2 for i, j, k in zip(p0, p1, ratios)]))
+
+				def increment_tuple(shape):
+					coord = [0] * len(shape)
+					num = 0
+					while coord[0] < shape[0]:
+						yield num, coord
+						num += 1
+						for i in range(len(coord) - 1, -1, -1):
+							if i == len(coord) - 1:
+								coord[i] += 1
+							elif coord[i + 1] >= shape[i + 1]:
+								coord[i] += 1
+								coord[i + 1] = 0
 
 				if i > 0:
-					print(i)
-					ratiox = arch[i - 1][0] / float(arch[i][0])
-					ratioy = arch[i - 1][1] / float(arch[i][1])
-					for x in range(arch[i][0]):
-						for y in range(arch[i][1]):
-							# print(i, y + x * arch[i][1])
-							indexes = [j for j in range(len(self.layers[-2])) if distance((x * ratiox, y * ratioy), (j / arch[i - 1][1], j % arch[i - 1][1])) <= convolutional]
-							outputs = [self.layers[-2][j].output for j in indexes]
-							readies = [self.layers[-2][j].ready for j in indexes]
-							self.layers[-1].append(Neuron(outputs, readies=readies, activation=activation))
+					ratios = [x1 / float(x2) for x1, x2 in zip(arch[i - 1], arch[i])]
+					for num, coord in increment_tuple(arch[i]):
+						print(i, num, coord, arch[i])
+						indexes = [j for j, comp in increment_tuple(arch[i-1]) if distance(coord, comp, ratios) <= convolutional]
+						outputs = [self.layers[-2][j].output for j in indexes]
+						readies = [self.layers[-2][j].ready for j in indexes]
+						self.layers[-1].append(Neuron(outputs, readies=readies, activation=activation))
 				else:
 					from operator import mul
-					for j in range(reduce(mul, arch[i])):	# n-dimension support achieved
+					for j in range(reduce(mul, arch[i])):
 						self.inputs.append(Value('f', 0))
 						self.readies.append(Value('b', 0))
 						self.layers[-1].append(Neuron([self.inputs[j]], readies=[self.readies[j]], activation=activation))
