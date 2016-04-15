@@ -8,10 +8,126 @@ else:
 		def __init__(self, type='i', val=None):
 			self.value = val
 
+# Activation function section
+
+def identity(value):
+	return value
+
+
+def step(value):
+	"""A step function"""
+	if value <= 0:
+		return 0
+	else:
+		return 1
+
+def sigmoid(value):
+	"""The sigmoid function."""
+	import math
+	return 1.0 / (1.0 + math.exp(-value))
+
+
+def tanh(value):
+	import math
+	return math.tanh(value)
+
+
+def arctan(value):
+	import math
+	return math.atan(value)
+
+
+def softsign(value):
+	return value / (1 + abs(value))
+
+
+def leaky_ReLU(value, weight):
+	return max(value * weight, value)
+
+
+def get_partial_ReLU(weight):
+	from functools import partial
+	return partial(leaky_ReLU, weight=weight)
+
+
+def ReLU(value):
+	return leaky_ReLU(value, 0)
+
+
+def param_ReLU(value, weight):
+	if value >= 0:
+		return value
+	else:
+		return value * weight
+
+
+def get_partial_PReLU(weight):
+	from functools import partial
+	return partial(param_ReLU, weight=weight)
+
+
+def exp_ReLU(value, weight):
+	if value >= 0:
+		return value
+	else:
+		import math
+		return weight * (math.e**value - 1)
+
+
+def get_partial_ELU(weight):
+	from functools import partial
+	return partial(exp_ReLU, weight=weight)
+
+
+def softplus(value):
+	"""The softplus function"""
+	import math
+	return math.log(1 + math.e**x)
+
+
+def bent_identity(value):
+	import math
+	return (math.sqrt(value**2 + 1) - 1) / float(2 + value)
+
+
+def soft_exponential(value, weight):
+	import math
+	if weight > 0:
+		return -(math.log(1 - weight * (value + weight)) / float(weight))
+	elif weight == 0:
+		return value
+	else:
+		return (math.e**(weight * value) - 1) / float(weight) + weight
+
+
+def get_partial_soft_exponential(weight):
+	from functools import partial
+	return partial(soft_exponential, weight=weight)	
+
+
+def sinusoid(value):
+	import math
+	return math.sin(value)
+
+
+def sinc(value):
+	if value == 0:
+		return 1
+	else:
+		import math
+		return math.sin(value) / float(value)
+
+
+def gaussian(value):
+	import math
+	return math.e**(-value**2)
+
+# End activation section
+
 
 class Neural_Network(object):
-	def __init__(self, arch, sigmoid=True, convolutional=0):
-		self.sigmoid = sigmoid
+	def __init__(self, arch, activation=tanh, convolutional=0):
+		self.activation = activation
 		self.convolutional = convolutional
 		self.layers = []
 		self.inputs = []
@@ -39,21 +155,21 @@ class Neural_Network(object):
 							indexes = [j for j in range(len(self.layers[-2])) if distance((x * ratiox, y * ratioy), (j / arch[i - 1][1], j % arch[i - 1][1])) <= convolutional]
 							outputs = [self.layers[-2][j].output for j in indexes]
 							readies = [self.layers[-2][j].ready for j in indexes]
-							self.layers[-1].append(Neuron(outputs, readies=readies, sigmoid=sigmoid))
+							self.layers[-1].append(Neuron(outputs, readies=readies, activation=activation))
 				else:
 					from operator import mul
 					for j in range(reduce(mul, arch[i])):	# n-dimension support achieved
 						self.inputs.append(Value('f', 0))
 						self.readies.append(Value('b', 0))
-						self.layers[-1].append(Neuron([self.inputs[j]], readies=[self.readies[j]], sigmoid=sigmoid))
+						self.layers[-1].append(Neuron([self.inputs[j]], readies=[self.readies[j]], activation=activation))
 			else:
 				for j in range(arch[i]):
 					if i > 0:
-						self.layers[-1].append(Neuron([n.output for n in self.layers[-2]], readies=[n.ready for n in self.layers[-2]], sigmoid=sigmoid))
+						self.layers[-1].append(Neuron([n.output for n in self.layers[-2]], readies=[n.ready for n in self.layers[-2]], activation=activation))
 					else:
 						self.inputs.append(Value('f', 0))
 						self.readies.append(Value('b', 0))
-						self.layers[-1].append(Neuron([self.inputs[j]], readies=[self.readies[j]], sigmoid=sigmoid))
+						self.layers[-1].append(Neuron([self.inputs[j]], readies=[self.readies[j]], activation=activation))
 
 	def feed(self, inputs, multiple=False):
 		if multiple:
@@ -129,7 +245,7 @@ class Neural_Network(object):
 
 
 class Neuron(object):
-	def __init__(self, inputs, readies=[], weights=None, biases=None, sigmoid=True):
+	def __init__(self, inputs, readies=[], weights=None, biases=None, activation=tanh):
 		import random
 		self.inputs = inputs
 		self.readies = readies
@@ -139,8 +255,11 @@ class Neuron(object):
 		self.biases = biases
 		if not self.biases:
 			self.biases = [random.gauss(0, 1) for x in inputs]
-		if not sigmoid:
-			self.sigmoid = self.step
+		try:
+			activation(0)
+			self.activation = activation
+		except:
+			raise Exception("Activation must be a function, and it must take one argument. If you're using a supplied activation function with two arguments, define the weight with the get_partial version")
 		self.output = Value('f', 0.0)
 		self.ready = Value('b', False)
 		if using_multiprocessing:
@@ -156,26 +275,14 @@ class Neuron(object):
 			self.ready.value = False
 			time.sleep(0.01)
 		values = [self.weights[i] * self.inputs[i].value + self.biases[i] for i in range(len(self.inputs))]
-		self.output.value = self.sigmoid(sum(values))
+		self.output.value = self.activation(sum(values))
 		self.ready.value = True
-		return self.sigmoid(sum(values))
+		return self.activation(sum(values))
 
-	def sigmoid(self, value):
-		"""The sigmoid function."""
-		import math
-		return 1.0 / (1.0 + math.exp(-value))
-
-	def step(self, value):
-		"""A step function posing as the sigmoid function."""
-		if value <= 0:
-			return 0
-		else:
-			return 1
-
-	def sigmoid_prime(self, value):
-		"""Derivative of the sigmoid function."""
-		sigmoid = self.sigmoid(value)
-		return (sigmoid * (1 - sigmoid))
+	def activation_prime(self, value):
+		"""Derivative of the activation function (currently only works for sigmoid-like functions)."""
+		val = self.activation(value)
+		return (val * (1 - val))
 
 
 def Neuron_wrapper(neuron):
