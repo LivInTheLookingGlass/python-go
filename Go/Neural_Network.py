@@ -122,6 +122,27 @@ def gaussian(value):
 	import math
 	return math.e**(-value**2)
 
+
+def derivative(f, h=1e-3):
+     """Return derivative of function f (also a function)"""
+     def df(x):
+         return (f(x + h) - f(x)) / h
+     return df
+
+
+def sigmoid_prime(value, func):
+	"""Derivative of sigmoid-like functions."""
+	val = func(value)
+	return (val * (1 - val))
+
+
+def get_partial_sigmoid_prime(func):
+	from functools import partial
+	return partial(sigmoid_prime, func=func)
+
+
+sigmoid_like = [sigmoid, tanh, softsign]
+
 # End activation section
 
 
@@ -272,6 +293,10 @@ class Neuron(object):
 		try:
 			activation(0)
 			self.activation = activation
+			if activation in sigmoid_like:
+				self.derivative = get_partial_sigmoid_prime(activation)
+			else:
+				self.derivative = derivative(activation)
 		except:
 			raise Exception("Activation must be a function, and it must take one argument. If you're using a supplied activation function with two arguments, define the weight with the get_partial version")
 		self.output = Value('f', 0.0)
@@ -292,11 +317,6 @@ class Neuron(object):
 		self.output.value = self.activation(sum(values))
 		self.ready.value = True
 		return self.activation(sum(values))
-
-	def activation_prime(self, value):
-		"""Derivative of the activation function (currently only works for sigmoid-like functions)."""
-		val = self.activation(value)
-		return (val * (1 - val))
 
 
 def Neuron_wrapper(neuron):
